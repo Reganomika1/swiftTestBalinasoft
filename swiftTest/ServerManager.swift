@@ -162,7 +162,37 @@ class ServerManager: NSObject {
             }
         }
     }
+    
+    func getImage(imageUrl: String, complition: @escaping (Bool, Data?, String?) -> ()) {
+        
+        Alamofire.request(imageUrl).responseJSON {
+            response in
+            let status = response.response?.statusCode
+            print(status ?? "status error")
+            let data = response.data
+            if status == 200 {
+                if let data = data {
+                    complition(true, data, nil)
+                } else {
+                    complition(true, nil, nil)
+                }
+            } else {
+                if let data = data {
+                    let json = JSON(data: data)
+                    print(json)
+                    let message = json["message"].string
+                    complition(false, data, message)
+                }
+                complition(false, nil, nil)
+            }
+        }
+    }
 
+    
+    
+
+    
+    
     func getAdressFromCoordinate(lat: Double, lng: Double, completion: @escaping (NSString) -> ()) {
 
         Alamofire.request("https://maps.googleapis.com/maps/api/geocode/json?latlng=\(lat),\(lng)&key=AIzaSyDb-UfnwILiDMS25zAZVapDXcamJSQMBzo", method: .post, parameters:nil, encoding: URLEncoding.default, headers: nil).responseJSON { (response) in

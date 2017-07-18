@@ -178,6 +178,26 @@ UINavigationControllerDelegate, UICollectionViewDelegate, UICollectionViewDataSo
 //    }
     
     
+    func compressImage (_ image: UIImage) -> UIImage {
+        
+        let actualHeight:CGFloat = image.size.height
+        let actualWidth:CGFloat = image.size.width
+        let imgRatio:CGFloat = actualWidth/actualHeight
+        let maxWidth:CGFloat = 800.0
+        let resizedHeight:CGFloat = maxWidth/imgRatio
+        let compressionQuality:CGFloat = 0.5
+        
+        let rect:CGRect = CGRect(x: 0, y: 0, width: maxWidth, height: resizedHeight)
+        UIGraphicsBeginImageContext(rect.size)
+        image.draw(in: rect)
+        let img: UIImage = UIGraphicsGetImageFromCurrentImageContext()!
+        let imageData:Data = UIImageJPEGRepresentation(img, compressionQuality)!
+        UIGraphicsEndImageContext()
+        
+        return UIImage(data: imageData)!
+        
+    }
+    
     //MARK: - Delegates
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any])
@@ -252,23 +272,3 @@ UINavigationControllerDelegate, UICollectionViewDelegate, UICollectionViewDataSo
     }
 }
 
-
-func compressImage (_ image: UIImage) -> UIImage {
-    
-    let actualHeight:CGFloat = image.size.height
-    let actualWidth:CGFloat = image.size.width
-    let imgRatio:CGFloat = actualWidth/actualHeight
-    let maxWidth:CGFloat = 800.0
-    let resizedHeight:CGFloat = maxWidth/imgRatio
-    let compressionQuality:CGFloat = 0.5
-    
-    let rect:CGRect = CGRect(x: 0, y: 0, width: maxWidth, height: resizedHeight)
-    UIGraphicsBeginImageContext(rect.size)
-    image.draw(in: rect)
-    let img: UIImage = UIGraphicsGetImageFromCurrentImageContext()!
-    let imageData:Data = UIImageJPEGRepresentation(img, compressionQuality)!
-    UIGraphicsEndImageContext()
-    
-    return UIImage(data: imageData)!
-    
-}
