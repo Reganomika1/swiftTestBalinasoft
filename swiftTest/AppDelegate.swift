@@ -87,10 +87,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func saveContext () {
 
-        let nc = NotificationCenter.default
-        nc.post(name:Notification.Name(rawValue:"saveContext"),
-                object: nil,
-                userInfo: nil)
+//        let nc = NotificationCenter.default
+//        nc.post(name:Notification.Name(rawValue:"saveContext"),
+//                object: nil,
+//                userInfo: nil)
         
         let context = persistentContainer.viewContext
         if context.hasChanges {

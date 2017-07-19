@@ -10,7 +10,7 @@ import UIKit
 import CoreData
 import SDWebImage
 
-class PhotoViewerViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+class PhotoViewerViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, NSFetchedResultsControllerDelegate {
 
     @IBOutlet weak var imageView: UIImageView!    
     @IBOutlet weak var dateLabel: UILabel!
@@ -20,10 +20,7 @@ class PhotoViewerViewController: UIViewController, UITableViewDelegate, UITableV
     var objectImageEntity: Item!
     var page: Int = 0
     
-    var comments = [Comment]()
-    
-    let appDelegate = (UIApplication.shared.delegate) as! AppDelegate
-    var context : NSManagedObjectContext!
+    var fetchedControl: NSFetchedResultsController<NSFetchRequestResult>!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -34,20 +31,19 @@ class PhotoViewerViewController: UIViewController, UITableViewDelegate, UITableV
         
         self.imageView.sd_setImage(with: URL(string: objectImageEntity.imageUrl!))
         
-        context = appDelegate.persistentContainer.viewContext
+        fetchedControl = CoreDataManager.data.getFetchedResultController(entityName: "Comment", sortDescriptor: "date", ascending: true)
+        fetchedControl.delegate = self
         do {
-            let request = NSFetchRequest<NSFetchRequestResult>(entityName: "Comment")
-            let sort = NSSortDescriptor(key: "date", ascending: false)
-            request.sortDescriptors = [sort]
-            
-            let result = try  context.fetch(request)
-            comments = result as! [Comment]
+            try fetchedControl.performFetch()
         } catch {}
+
         
         let date = Date(timeIntervalSince1970: TimeInterval(objectImageEntity.date))
         let fomatter = DateFormatter()
         fomatter.dateFormat = "dd.MM.yyyy"
         self.dateLabel.text = fomatter.string(from: date)
+        
+        tableView.scrollToLastRow(animated: true)
         
         loadCommentsFromPage(page: 0)
     }
@@ -59,7 +55,7 @@ class PhotoViewerViewController: UIViewController, UITableViewDelegate, UITableV
     //MARK: - Number of rows in section table view
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return comments.count
+        return (self.objectImageEntity.comment?.allObjects.count)!
     }
     
     //MARK: - Cell for row at indexPath
@@ -105,32 +101,23 @@ class PhotoViewerViewController: UIViewController, UITableViewDelegate, UITableV
             if success == true {
                 let commentsArray = response?["data"].arrayValue
                 
-                
-                label: for comment in commentsArray! {
+                flag: for element in commentsArray! {
                     
                     let massCommentsFromImage = self.objectImageEntity.comment?.allObjects as! [Comment]
                     for object in massCommentsFromImage {
-                        if object.commentId == comment["id"].int32! {
-                            continue label
+                        if object.commentId == element["id"].int32! {
+                            continue flag
                         }
                     }
-                    let commentItem = Comment(context : self.context)
-                    commentItem.text = comment["text"].stringValue
-                    commentItem.date = comment["date"].int32Value
-                    commentItem.commentId = Int32(comment["id"].intValue)
-                    commentItem.item = self.objectImageEntity
-                    self.appDelegate.saveContext()
-                }
-                do {
-                    let request = NSFetchRequest<NSFetchRequestResult>(entityName: "Comment")
-                    let sort = NSSortDescriptor(key: "date", ascending: false)
-                    request.sortDescriptors = [sort]
                     
-                    let result = try  self.context.fetch(request)
-                    self.comments = result as! [Comment]
-                } catch {}
+                    let objectCommentEntity = Comment()
+                    objectCommentEntity.date = element["date"].int32!
+                    objectCommentEntity.commentId = element["id"].int32!
+                    objectCommentEntity.text = element["text"].stringValue
+                    objectCommentEntity.item = self.objectImageEntity
+                    CoreDataManager.data.saveContext()
+                }
             }
-            
             self.tableView.reloadData()
         })
     }
@@ -151,17 +138,8 @@ class PhotoViewerViewController: UIViewController, UITableViewDelegate, UITableV
                 
                 ServerManager.shared.removeComment(commentId: Int(objectCommentEntity.commentId), imageId:  Int(self.objectImageEntity.itemId), complition:{ success, response, error in
                     if success == true {
-                        self.context.delete(objectCommentEntity)
-                        self.appDelegate.saveContext()
-                        do {
-                            let request = NSFetchRequest<NSFetchRequestResult>(entityName: "Comment")
-                            let sort = NSSortDescriptor(key: "date", ascending: false)
-                            request.sortDescriptors = [sort]
-                            
-                            let result = try  self.context.fetch(request)
-                            self.comments = result as! [Comment]
-                        } catch {}
-                        self.tableView.deleteRows(at: [indexPath as IndexPath], with: .fade)
+                        CoreDataManager.data.managedObjectContext.delete(objectCommentEntity)
+                        CoreDataManager.data.saveContext()
                     }
                 })
             }))
@@ -173,6 +151,10 @@ class PhotoViewerViewController: UIViewController, UITableViewDelegate, UITableV
         return [deleteAction]
     }
     
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        self.tableView.reloadData()
+    }
+    
     
     //MARK: - Actions
     
@@ -181,26 +163,33 @@ class PhotoViewerViewController: UIViewController, UITableViewDelegate, UITableV
         ServerManager.shared.postComment(imageId: Int(objectImageEntity.itemId), text: commentTextField.text!, complition:{ success, response, error in
             
             if success == true{
-                let commentItem = Comment(context: self.context)
-                commentItem.text = response?["data"]["text"].stringValue
-                commentItem.date = (response?["data"]["date"].int32Value)!
-                commentItem.commentId = Int32((response?["data"]["id"].intValue)!)
-                commentItem.item = self.objectImageEntity
-                self.appDelegate.saveContext()
-                self.commentTextField.text = ""
+                let objectCommentEntity = Comment()
+                objectCommentEntity.commentId = (response?["data"]["id"].int32!)!
+                objectCommentEntity.date = (response?["data"]["date"].int32!)!
+                objectCommentEntity.text = response?["data"]["text"].stringValue
+                objectCommentEntity.item = self.objectImageEntity
+                CoreDataManager.data.saveContext()
                 
-                do {
-                    let request = NSFetchRequest<NSFetchRequestResult>(entityName: "Comment")
-                    let sort = NSSortDescriptor(key: "date", ascending: false)
-                    request.sortDescriptors = [sort]
-                    
-                    let result = try  self.context.fetch(request)
-                    self.comments = result as! [Comment]
-                } catch {}
+                self.commentTextField.text = ""
                 
                 self.tableView.reloadData()
             }
         })
     }
 
+}
+
+extension UITableView {
+    func setOffsetToBottom(animated: Bool) {
+        self.setContentOffset(CGPoint(x:0,y: self.contentSize.height - self.frame.size.height), animated: true)
+    }
+    
+    func scrollToLastRow(animated: Bool) {
+        let numberOfSections = self.numberOfSections
+        let numberOfRows = self.numberOfRows(inSection: numberOfSections-1)
+        if self.numberOfRows(inSection: 0) > 0 {
+            let indexPath = NSIndexPath(row: numberOfRows-1, section: numberOfSections-1)
+            self.scrollToRow(at: indexPath as IndexPath, at: UITableViewScrollPosition.bottom, animated: animated)
+        }
+    }
 }
