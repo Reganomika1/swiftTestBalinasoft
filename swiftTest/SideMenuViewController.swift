@@ -30,12 +30,12 @@ class SideMenuViewController: UIViewController {
         nameLabel.text = UserDefaults.standard.value(forKey: "login") as? String
         
         tableView.tableFooterView = UIView()
-
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
     }
+    
 }
 
 extension SideMenuViewController: UITableViewDataSource {

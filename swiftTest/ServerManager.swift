@@ -74,6 +74,8 @@ class ServerManager: NSObject {
         }
     }
     
+    //MARK: - Photos
+    
     func postPhoto(imageData: String, date: Int, lat: Double, lng: Double, complition: @escaping (Bool, JSON?, String?) -> ()) {
         
         let token = UserDefaults.standard.value(forKey: "token") as? String
@@ -163,6 +165,102 @@ class ServerManager: NSObject {
         }
     }
     
+    //MARK: - Comments
+    
+    func postComment(imageId: Int, text: String, complition: @escaping (Bool, JSON?, String?) -> ()) {
+        
+        let token = UserDefaults.standard.value(forKey: "token") as? String
+        let params: Parameters = [ "text" : text]
+        let headers: HTTPHeaders = [ "Access-Token": token!]
+        
+         Alamofire.request("http://213.184.248.43:9099/api/image/\(imageId)/comment", method:.post, parameters: params, encoding:JSONEncoding.default, headers : headers).responseJSON {
+            response in
+            let status = response.response?.statusCode
+            print(status ?? "status error")
+            let data = response.data
+            if status == 200 {
+                if let data = data {
+                    let json = JSON(data: data)
+                    print(json)
+                    complition(true, json, nil)
+                } else {
+                    complition(true, nil, nil)
+                }
+            } else {
+                if let data = data {
+                    let json = JSON(data: data)
+                    print(json)
+                    let message = json["message"].string
+                    complition(false, json, message)
+                }
+                complition(false, nil, nil)
+            }
+        }
+    }
+    
+    func removeComment(commentId: Int, imageId: Int, complition: @escaping (Bool, JSON?, String?) -> ()) {
+        
+        let token = UserDefaults.standard.value(forKey: "token") as? String
+        
+        let params: Parameters = ["imageId" : imageId, "commentId" : commentId]
+        
+        
+        Alamofire.request("http://213.184.248.43:9099/api/image/\(imageId)/comment/\(commentId)", method: .delete, parameters: params, encoding: JSONEncoding.default, headers: ["Access-Token": token!]).responseJSON {
+            response in
+            let status = response.response?.statusCode
+            print(status ?? "status error")
+            let data = response.data
+            if status == 200 {
+                if let data = data {
+                    let json = JSON(data: data)
+                    print(json)
+                    complition(true, json, nil)
+                } else {
+                    complition(true, nil, nil)
+                }
+            } else {
+                if let data = data {
+                    let json = JSON(data: data)
+                    print(json)
+                    let message = json["message"].string
+                    complition(false, json, message)
+                }
+                complition(false, nil, nil)
+            }
+        }
+    }
+    
+    func getComments(page: Int, imageId: Int, complition: @escaping (Bool, JSON?, String?) -> ()) {
+        
+        let token = UserDefaults.standard.value(forKey: "token") as? String
+        
+        let params: Parameters = ["imageId" : imageId, "page": page]
+        
+        Alamofire.request("http://213.184.248.43:9099/api/image/\(imageId)/comment", method: .get, parameters: params, encoding: URLEncoding.default, headers: ["Access-Token": token!]).responseJSON {
+            response in
+            let status = response.response?.statusCode
+            print(status ?? "status error")
+            let data = response.data
+            if status == 200 {
+                if let data = data {
+                    let json = JSON(data: data)
+                    print(json)
+                    complition(true, json, nil)
+                } else {
+                    complition(true, nil, nil)
+                }
+            } else {
+                if let data = data {
+                    let json = JSON(data: data)
+                    print(json)
+                    let message = json["message"].string
+                    complition(false, json, message)
+                }
+                complition(false, nil, nil)
+            }
+        }
+    }
+    
     func getImage(imageUrl: String, complition: @escaping (Bool, Data?, String?) -> ()) {
         
         Alamofire.request(imageUrl).responseJSON {
@@ -184,21 +282,6 @@ class ServerManager: NSObject {
                     complition(false, data, message)
                 }
                 complition(false, nil, nil)
-            }
-        }
-    }
-
-    
-    
-
-    
-    
-    func getAdressFromCoordinate(lat: Double, lng: Double, completion: @escaping (NSString) -> ()) {
-
-        Alamofire.request("https://maps.googleapis.com/maps/api/geocode/json?latlng=\(lat),\(lng)&key=AIzaSyDb-UfnwILiDMS25zAZVapDXcamJSQMBzo", method: .post, parameters:nil, encoding: URLEncoding.default, headers: nil).responseJSON { (response) in
-            if response.result.isSuccess {
-                let json = JSON(response.result.value!)
-                completion(json["results"][0]["formatted_address"].stringValue as NSString)
             }
         }
     }

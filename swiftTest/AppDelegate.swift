@@ -25,8 +25,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UINavigationBar.appearance().backIndicatorImage = UIImage(named: "ic_back")
         UINavigationBar.appearance().backIndicatorTransitionMaskImage = UIImage(named: "ic_back")
         UIBarButtonItem.appearance().setBackButtonTitlePositionAdjustment(UIOffsetMake(0, -200), for: .default)
-        UINavigationBar.appearance().barTintColor = UIColor(red: 41.0/255.0, green: 41.0/255.0, blue: 41.0/255.0, alpha: 1.0)
-        UINavigationBar.appearance().tintColor = UIColor(red: 255.0/255.9, green: 210.0/255.0, blue: 0.0, alpha: 1.0)
+        UINavigationBar.appearance().barTintColor = UIColor(red: 44.0/255.0, green: 196.0/255.0, blue: 10.0/255.0, alpha: 1.0)
+        UINavigationBar.appearance().tintColor = .white
         return true
     }
 
@@ -86,6 +86,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // MARK: - Core Data Saving support
 
     func saveContext () {
+
+        let nc = NotificationCenter.default
+        nc.post(name:Notification.Name(rawValue:"saveContext"),
+                object: nil,
+                userInfo: nil)
+        
         let context = persistentContainer.viewContext
         if context.hasChanges {
             do {

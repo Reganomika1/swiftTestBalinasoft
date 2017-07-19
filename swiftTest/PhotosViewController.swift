@@ -9,6 +9,7 @@
 import UIKit
 import CoreLocation
 import SDWebImage
+import CoreData
 
 class PhotosViewController: UIViewController, SWRevealViewControllerDelegate, UIImagePickerControllerDelegate,
 UINavigationControllerDelegate, UICollectionViewDelegate, UICollectionViewDataSource, CLLocationManagerDelegate, UIActionSheetDelegate, UIGestureRecognizerDelegate {
@@ -20,14 +21,18 @@ UINavigationControllerDelegate, UICollectionViewDelegate, UICollectionViewDataSo
     let locationManager = CLLocationManager()
     var longTap: UILongPressGestureRecognizer!
     
+    let appDelegate = (UIApplication.shared.delegate) as! AppDelegate
+    var context : NSManagedObjectContext!
+    
+    var items = [Item]()
+    
     var lat: Double = 0, lng: Double = 0
     var page: Int = 0
-    var items = [Item]()
+//    var items = [Item]()
     
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
         if self.revealViewController() != nil {
             sideMenuButton.target = self.revealViewController()
             sideMenuButton.action = #selector(SWRevealViewController.revealToggle(_:))
@@ -47,9 +52,27 @@ UINavigationControllerDelegate, UICollectionViewDelegate, UICollectionViewDataSo
         locationManager.requestWhenInUseAuthorization()
         locationManager.startUpdatingLocation()
         
+        context = appDelegate.persistentContainer.viewContext
+//        do {
+//            let request = NSFetchRequest<NSFetchRequestResult>(entityName: "Item")
+//            let sort = NSSortDescriptor(key: "date", ascending: false)
+//            request.sortDescriptors = [sort]
+//            
+//            let result = try  context.fetch(request)
+//            items = result as! [Item]
+//        } catch {}
+        
         picker.delegate = self
+        
+        let nc = NotificationCenter.default
+        nc.addObserver(forName:NSNotification.Name(rawValue: "saveContext"), object:nil, queue:nil, using:catchNotification)
+    
     }
 
+    func catchNotification(notification:Notification) -> Void {
+        photoCollectionView.reloadData()
+    }
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
     }
@@ -73,37 +96,52 @@ UINavigationControllerDelegate, UICollectionViewDelegate, UICollectionViewDataSo
     //MARK: - Number of items in section collection view
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return items.count
+        do {
+            let request = NSFetchRequest<NSFetchRequestResult>(entityName: "Item")
+            let sort = NSSortDescriptor(key: "date", ascending: false)
+            request.sortDescriptors = [sort]
+            let result = try  context.fetch(request)
+            items.removeAll()
+            items = result as! [Item]
+            print(items.count)
+            return items.count
+        } catch {
+            return 0
+        }
     }
     
     //MARK: - Pagination images
     
     func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
         
-        if (items.count - indexPath.row - 1) == 0 {
-            
-            page += 1
-            
-            loadImagesFromPage(page: self.page)
-        }
+//        if (items.count - indexPath.row - 4)  == 0 {
+//            
+//            page += 1
+//            
+//            loadImagesFromPage(page: self.page)
+//        }
     }
     
     func loadImagesFromPage(page: Int) {
         ServerManager.shared.getPhotos(page: page, complition: { success, response, error in
             if success == true {
                 let imagesArray = response?["data"].arrayValue
-                for image in imagesArray! {
-                    let item = Item()
+                label : for image in imagesArray! {
+                    for object in self.items {
+                        if object.itemId == image["id"].int32! {
+                            continue label
+                        }
+                    }
+                    let item = Item(context : self.context)
+                    item.comment = nil
                     item.imageUrl = image["url"].stringValue
                     item.date = image["date"].int32Value
                     item.lng = image["lng"].doubleValue
                     item.lat = image["lat"].doubleValue
-                    item.itemId = image["id"].intValue
-                    self.items.append(item)
+                    item.itemId = image["id"].int32Value
+                    self.appDelegate.saveContext()
                 }
             }
-            
-            self.photoCollectionView.reloadData()
         })
     }
     
@@ -117,14 +155,17 @@ UINavigationControllerDelegate, UICollectionViewDelegate, UICollectionViewDataSo
         
         if let indexPath = (self.photoCollectionView.indexPathForItem(at: point)) {
             
-            let item = items[indexPath.item] as Item
+            let objectEntityImage = items[indexPath.item]
             
             let alert = UIAlertController(title: "", message: "Do you want to delete this photo?", preferredStyle: UIAlertControllerStyle.alert)
             
             alert.addAction(UIAlertAction(title: "Yes", style: UIAlertActionStyle.default, handler: { action in
                 
-                ServerManager.shared.removePhoto(itemId: item.itemId, complition: { success, response, error in
-                    self.items.removeAll()
+                ServerManager.shared.removePhoto(itemId: Int(objectEntityImage.itemId), complition: { success, response, error in
+                    SDImageCache.shared().removeImage(forKey: objectEntityImage.imageUrl)
+                    
+                    self.context.delete(objectEntityImage)
+                    self.appDelegate.saveContext()
                     self.loadImagesFromPage(page: 0)
                 })
 
@@ -132,9 +173,7 @@ UINavigationControllerDelegate, UICollectionViewDelegate, UICollectionViewDataSo
             
             alert.addAction(UIAlertAction(title: "No", style: UIAlertActionStyle.default, handler: nil))
             self.present(alert, animated: true, completion: nil)
-            
         }
-        
     }
 
     
@@ -145,9 +184,11 @@ UINavigationControllerDelegate, UICollectionViewDelegate, UICollectionViewDataSo
         
         let cell = photoCollectionView.dequeueReusableCell(withReuseIdentifier: "photoCell", for: indexPath) as! PhotoCollectionViewCell
         
-        cell.imageView.sd_setImage(with: URL(string: items[indexPath.item].imageUrl))
+        let objectEntityImage = items[indexPath.item]
         
-        let date = Date(timeIntervalSince1970: TimeInterval(items[indexPath.item].date))
+        cell.imageView.sd_setImage(with: URL(string: objectEntityImage.imageUrl!))
+        
+        let date = Date(timeIntervalSince1970: TimeInterval(objectEntityImage.date))
         let fomatter = DateFormatter()
         fomatter.dateFormat = "dd.MM.yyyy"
         cell.dateLabel.text = fomatter.string(from: date)
@@ -158,24 +199,14 @@ UINavigationControllerDelegate, UICollectionViewDelegate, UICollectionViewDataSo
     
     //MARK: - Did select item in collection view
     
-//    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-//        let controlPhoto = self.storyboard?.instantiateViewController(withIdentifier: "photoControl") as! PhotoCollectionViewCell
-//        controlPhoto.objectImageEntity = fetchedControl.object(at: indexPath) as! Image
-//        self.navigationController?.pushViewController(controlPhoto, animated: true)
-//    }
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let storyboard = UIStoryboard(name: "PhotoViewer", bundle: nil)
+        let photoViewer = storyboard.instantiateViewController(withIdentifier: "photoViewer")  as! PhotoViewerViewController
+        photoViewer.objectImageEntity = items[indexPath.item]
+        self.navigationController?.pushViewController(photoViewer, animated: true)
+    }
     
-    //MARK: - Pagination images
-    
-//    func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-//        
-//        if ((fetchedControl.sections!.first?.numberOfObjects)! - indexPath.row - 1) == 0 {
-//            
-//            self.page += 1
-//            loadImagesFromPage(page: self.page)
-//            
-//        }
-//        
-//    }
+
     
     
     func compressImage (_ image: UIImage) -> UIImage {
@@ -258,15 +289,14 @@ UINavigationControllerDelegate, UICollectionViewDelegate, UICollectionViewDataSo
         ServerManager.shared.postPhoto(imageData: imageData!.base64EncodedString(), date: timeInterval, lat: lat, lng: lng, complition: { success, response, error in
 
             if success == true{
-                let item = Item()
+                let item = Item(context: self.context)
+                item.comment = nil
                 item.imageUrl = response?["data"]["url"].stringValue
-                item.date = response?["data"]["date"].int32Value
+                item.date = (response?["data"]["date"].int32Value)!
                 item.lng = (response?["data"]["lng"].doubleValue)!
                 item.lat = (response?["data"]["lat"].doubleValue)!
-                item.itemId = (response?["id"].intValue)!
-                self.items.append(item)
-                
-                self.photoCollectionView.reloadData()
+                item.itemId = Int32((response?["id"].intValue)!)
+                self.appDelegate.saveContext()
             }
         })
     }
