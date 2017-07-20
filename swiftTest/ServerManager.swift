@@ -66,7 +66,12 @@ class ServerManager: NSObject {
                 if let data = data {
                     let json = JSON(data: data)
                     print(json)
-                    let message = json["message"].string
+                    let errors = json["valid"].arrayValue
+                    var message = String()
+                    for error in errors{
+                        message += error["message"].stringValue + "\n"
+                    }
+                    print(message)
                     complition(false, json, message)
                 }
                 complition(false, nil, nil)

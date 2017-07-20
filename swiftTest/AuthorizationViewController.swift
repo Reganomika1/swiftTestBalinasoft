@@ -88,7 +88,7 @@ class AuthorizationViewController: UIViewController {
                             UserDefaults.standard.setValue(login, forKey: "login")
                         }
                     } else {
-                        let alertController = UIAlertController(title: "Ой", message: error, preferredStyle: .alert)
+                        let alertController = UIAlertController(title: "", message: error, preferredStyle: .alert)
                         let okAction = UIAlertAction(title: "Ok", style: .cancel, handler: nil)
                         alertController.addAction(okAction)
                         self.present(alertController, animated: true, completion: nil)

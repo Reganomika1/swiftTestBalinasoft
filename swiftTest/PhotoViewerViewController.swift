@@ -48,8 +48,6 @@ class PhotoViewerViewController: UIViewController, UITableViewDelegate, UITableV
         fomatter.dateFormat = "dd.MM.yyyy"
         self.dateLabel.text = fomatter.string(from: date)
         
-        tableView.scrollToLastRow(animated: true)
-        
         loadCommentsFromPage(page: 0)
     }
 
@@ -173,7 +171,7 @@ class PhotoViewerViewController: UIViewController, UITableViewDelegate, UITableV
                     CoreDataManager.shared.saveContext()
                 }
             }
-            self.tableView.reloadData()
+            self.tableView.scrollToLastRow(animated: true)
         })
     }
 
