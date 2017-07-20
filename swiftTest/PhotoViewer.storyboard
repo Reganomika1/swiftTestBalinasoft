@@ -4,7 +4,6 @@
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
-        <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="12088"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -22,7 +21,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="none" allowsSelection="NO" rowHeight="60" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="8nM-Le-SCO">
-                                <rect key="frame" x="0.0" y="345" width="375" height="272"/>
+                                <rect key="frame" x="0.0" y="245" width="375" height="372"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <prototypes>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="commentCell" rowHeight="60" id="FWq-85-GIv" customClass="CommentTableViewCell" customModule="swiftTest" customModuleProvider="target">
@@ -82,9 +81,9 @@
                                 </connections>
                             </tableView>
                             <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="xqH-Fh-XTm">
-                                <rect key="frame" x="0.0" y="20" width="375" height="300"/>
+                                <rect key="frame" x="0.0" y="20" width="375" height="200"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="300" id="MdW-IT-nnh"/>
+                                    <constraint firstAttribute="height" constant="200" id="led-wb-58U"/>
                                 </constraints>
                             </imageView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="LeB-p6-HU8">
@@ -120,7 +119,7 @@
                                 </constraints>
                             </view>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="VHE-Ub-kM9">
-                                <rect key="frame" x="0.0" y="320" width="375" height="25"/>
+                                <rect key="frame" x="0.0" y="220" width="375" height="25"/>
                                 <subviews>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="12.05.2015" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="FyW-Xj-2wA">
                                         <rect key="frame" x="0.0" y="0.0" width="375" height="25"/>
@@ -150,8 +149,8 @@
                             <constraint firstItem="8nM-Le-SCO" firstAttribute="leading" secondItem="Iig-vA-xDZ" secondAttribute="leading" id="OKf-nY-Ic4"/>
                             <constraint firstItem="xqH-Fh-XTm" firstAttribute="top" secondItem="meL-VP-FJr" secondAttribute="bottom" id="Pgn-Um-0zA"/>
                             <constraint firstAttribute="trailing" secondItem="8nM-Le-SCO" secondAttribute="trailing" id="QQV-RC-8pE"/>
+                            <constraint firstItem="VHE-Ub-kM9" firstAttribute="top" secondItem="xqH-Fh-XTm" secondAttribute="bottom" id="SVY-VL-vwk"/>
                             <constraint firstItem="8nM-Le-SCO" firstAttribute="top" secondItem="VHE-Ub-kM9" secondAttribute="bottom" id="Sy8-1B-vlB"/>
-                            <constraint firstItem="VHE-Ub-kM9" firstAttribute="top" secondItem="xqH-Fh-XTm" secondAttribute="bottom" id="e3F-Pj-b0i"/>
                             <constraint firstItem="xqH-Fh-XTm" firstAttribute="leading" secondItem="Iig-vA-xDZ" secondAttribute="leading" id="rng-tL-cXP"/>
                             <constraint firstAttribute="trailing" secondItem="VHE-Ub-kM9" secondAttribute="trailing" id="wOp-oI-jcd"/>
                         </constraints>

@@ -14,19 +14,19 @@ class AuthorizationViewController: UIViewController {
     @IBOutlet weak var loginLabel: UITextField!
     @IBOutlet weak var passwordLabel: UITextField!
     @IBOutlet weak var confirmLabel: UITextField!
-    @IBOutlet weak var actionButton: UIButton!
     @IBOutlet weak var loginPageSelectedView: UIView!
     @IBOutlet weak var registrationPageSelectionView: UIView!
     @IBOutlet weak var viewUnderConfirmPassword: UIView!
+    @IBOutlet weak var actionButtonTextLabel: UILabel!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        loginPageSelectedView.isHidden = true
-        registrationPageSelectionView.isHidden = false
-        actionButton.titleLabel?.text = "SIGN IN"
-        viewUnderConfirmPassword.isHidden = false
-        confirmLabel.isHidden = false
+        loginPageSelectedView.isHidden = false
+        registrationPageSelectionView.isHidden = true
+        actionButtonTextLabel.text = "LOG IN"
+        viewUnderConfirmPassword.isHidden = true
+        confirmLabel.isHidden = true
     }
     
     
@@ -51,7 +51,8 @@ class AuthorizationViewController: UIViewController {
     //MARK: - Actions
     
     @IBAction func actionButtonPressed(_ sender: UIButton) {
-        if sender.titleLabel?.text == "LOG IN" {
+        if actionButtonTextLabel?.text == "LOG IN" {
+            print(loginLabel.text!, passwordLabel.text!)
             ServerManager.shared.signIn(login: loginLabel.text!, password: passwordLabel.text!, complition: { success, response, error in
                 if success == true {
                     DispatchQueue.main.async {
@@ -66,10 +67,11 @@ class AuthorizationViewController: UIViewController {
                         UserDefaults.standard.setValue(login, forKey: "login")
                     }
                 } else {
-                    let alertController = UIAlertController(title: "Ой", message: error, preferredStyle: .alert)
+                    let alertController = UIAlertController(title: "", message: error, preferredStyle: .alert)
                     let okAction = UIAlertAction(title: "Ok", style: .cancel, handler: nil)
                     alertController.addAction(okAction)
                     self.present(alertController, animated: true, completion: nil)
+                    self.actionButtonTextLabel.text = "LOG IN"
                 }
             })
         } else {
@@ -92,6 +94,7 @@ class AuthorizationViewController: UIViewController {
                         let okAction = UIAlertAction(title: "Ok", style: .cancel, handler: nil)
                         alertController.addAction(okAction)
                         self.present(alertController, animated: true, completion: nil)
+                        self.actionButtonTextLabel.text = "SIGN IN"
                     }
                 })
             } else {
@@ -99,6 +102,7 @@ class AuthorizationViewController: UIViewController {
                 let okAction = UIAlertAction(title: "Ok", style: .cancel, handler: nil)
                 alertController.addAction(okAction)
                 self.present(alertController, animated: true, completion: nil)
+                actionButtonTextLabel.text = "SIGN IN"
             }
         }
     }
@@ -106,7 +110,7 @@ class AuthorizationViewController: UIViewController {
     @IBAction func loginPageButtonPressed(_ sender: UIButton) {
         loginPageSelectedView.isHidden = false
         registrationPageSelectionView.isHidden = true
-        actionButton.titleLabel?.text = "LOG IN"
+        actionButtonTextLabel.text = "LOG IN"
         viewUnderConfirmPassword.isHidden = true
         confirmLabel.isHidden = true
         loginLabel?.text = nil
@@ -118,7 +122,7 @@ class AuthorizationViewController: UIViewController {
     @IBAction func registrationPageButtonPressed(_ sender: UIButton) {
         loginPageSelectedView.isHidden = true
         registrationPageSelectionView.isHidden = false
-        actionButton.titleLabel?.text = "SIGN IN"
+        actionButtonTextLabel.text = "SIGN IN"
         viewUnderConfirmPassword.isHidden = false
         confirmLabel.isHidden = false
         loginLabel?.text = nil

@@ -37,10 +37,19 @@ class ServerManager: NSObject {
                 if let data = data {
                     let json = JSON(data: data)
                     print(json)
-                    let message = json["message"].string
-                    complition(false, json, message)
+                    let errors = json["valid"].arrayValue
+                    var message = String()
+                    for error in errors{
+                        message += error["field"].stringValue + " : " + error["message"].stringValue + "\n"
+                    }
+                    if message != ""{
+                        complition(false, json, message)
+                    } else {
+                        complition(false, nil, "Неверный логин или пароль")
+                    }
+                    
                 }
-                complition(false, nil, nil)
+                complition(false, nil, "Неизвестная ошибка")
             }
         }
     }
@@ -71,9 +80,13 @@ class ServerManager: NSObject {
                     for error in errors{
                         message += error["field"].stringValue + " : " + error["message"].stringValue + "\n"
                     }
-                    complition(false, json, message)
+                    if message != ""{
+                        complition(false, json, message)
+                    } else {
+                        complition(false, nil, "Неизвестная ошибка")
+                    }
                 }
-                complition(false, nil, nil)
+                complition(false, nil, "Неизвестная ошибка")
             }
         }
     }

@@ -20,6 +20,7 @@ UINavigationControllerDelegate, UICollectionViewDelegate, UICollectionViewDataSo
     let picker = UIImagePickerController()
     let locationManager = CLLocationManager()
     var longTap: UILongPressGestureRecognizer!
+    var entityDescript :NSEntityDescription!
     
     var fetchedControl: NSFetchedResultsController<NSFetchRequestResult>!
     
@@ -34,6 +35,8 @@ UINavigationControllerDelegate, UICollectionViewDelegate, UICollectionViewDataSo
             sideMenuButton.action = #selector(SWRevealViewController.revealToggle(_:))
             self.view.addGestureRecognizer(self.revealViewController().panGestureRecognizer())
         }
+        
+        entityDescript = NSEntityDescription.entity(forEntityName: "Item", in: CoreDataManager.shared.managedObjectContext)
         
         longTap = UILongPressGestureRecognizer(target: self, action: #selector(longPressAction))
         longTap.minimumPressDuration = 0.5
@@ -241,7 +244,7 @@ UINavigationControllerDelegate, UICollectionViewDelegate, UICollectionViewDataSo
         ServerManager.shared.postPhoto(imageData: imageData!.base64EncodedString(), date: timeInterval, lat: lat, lng: lng, complition: { success, response, error in
             
             if success == true{
-                let item = Item()
+                let item = Item(entity: self.entityDescript, insertInto: CoreDataManager.shared.managedObjectContext)
                 item.itemId = (response?["data"]["id"].int32!)!
                 item.date = (response?["data"]["date"].int32!)!
                 item.imageUrl = response?["data"]["url"].stringValue
@@ -286,7 +289,7 @@ UINavigationControllerDelegate, UICollectionViewDelegate, UICollectionViewDataSo
                         }
                     }
                     
-                    let item = Item()
+                    let item = Item(entity: self.entityDescript, insertInto: CoreDataManager.shared.managedObjectContext)
                     item.itemId = element["id"].int32!
                     item.date = element["date"].int32!
                     item.imageUrl = element["url"].stringValue

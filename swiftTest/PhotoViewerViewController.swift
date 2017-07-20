@@ -20,6 +20,7 @@ class PhotoViewerViewController: UIViewController, UITableViewDelegate, UITableV
     var fetchedItem: Item!
     var page: Int = 0
     
+    var entityDescript :NSEntityDescription!
     var fetchedControl: NSFetchedResultsController<NSFetchRequestResult>!
     
     override func viewDidLoad() {
@@ -29,6 +30,8 @@ class PhotoViewerViewController: UIViewController, UITableViewDelegate, UITableV
         
         tableView.tableFooterView = UIView()
         
+        entityDescript = NSEntityDescription.entity(forEntityName: "Comment", in: CoreDataManager.shared.managedObjectContext)
+
         self.imageView.sd_setImage(with: URL(string: fetchedItem.imageUrl!) , placeholderImage: #imageLiteral(resourceName: "person"))
         
         fetchedControl = CoreDataManager.shared.getFetchedResultController(entityName: "Comment", sortDescriptor: "date", ascending: true)
@@ -133,11 +136,11 @@ class PhotoViewerViewController: UIViewController, UITableViewDelegate, UITableV
         ServerManager.shared.postComment(imageId: Int(fetchedItem.itemId), text: commentTextField.text!, complition:{ success, response, error in
             
             if success == true{
-                let objectCommentEntity = Comment()
-                objectCommentEntity.commentId = (response?["data"]["id"].int32!)!
-                objectCommentEntity.date = (response?["data"]["date"].int32!)!
-                objectCommentEntity.text = response?["data"]["text"].stringValue
-                objectCommentEntity.item = self.fetchedItem
+                let comment = Comment(entity: self.entityDescript, insertInto: CoreDataManager.shared.managedObjectContext)
+                comment.commentId = (response?["data"]["id"].int32!)!
+                comment.date = (response?["data"]["date"].int32!)!
+                comment.text = response?["data"]["text"].stringValue
+                comment.item = self.fetchedItem
                 CoreDataManager.shared.saveContext()
                 
                 self.commentTextField.text = ""
@@ -163,7 +166,7 @@ class PhotoViewerViewController: UIViewController, UITableViewDelegate, UITableV
                         }
                     }
                     
-                    let comment = Comment()
+                    let comment = Comment(entity: self.entityDescript, insertInto: CoreDataManager.shared.managedObjectContext)
                     comment.date = element["date"].int32!
                     comment.commentId = element["id"].int32!
                     comment.text = element["text"].stringValue

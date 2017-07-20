@@ -15,7 +15,7 @@
         <relationship name="comment" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Comment" inverseName="item" inverseEntity="Comment" syncable="YES"/>
     </entity>
     <elements>
-        <element name="Item" positionX="-351" positionY="-3" width="128" height="133"/>
-        <element name="Comment" positionX="-54" positionY="27" width="128" height="103"/>
+        <element name="Comment" positionX="-54" positionY="27" width="128" height="105"/>
+        <element name="Item" positionX="-351" positionY="-3" width="128" height="135"/>
     </elements>
 </model>

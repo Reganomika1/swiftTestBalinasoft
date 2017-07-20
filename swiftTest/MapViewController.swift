@@ -50,23 +50,23 @@ class MapViewController: UIViewController, SWRevealViewControllerDelegate {
     
 
     // MARK: Location
-    
-    func handleLocationAuthorizationStatus(status: CLAuthorizationStatus) {
-        switch status {
-        case .notDetermined:
-            print("notDetermined")
-            locationManager.requestWhenInUseAuthorization()
-        case .authorizedWhenInUse, .authorizedAlways:
-            print("authorizedWhenInUse, authorizedAlways")
-            locationManager.startUpdatingLocation()
-        case .denied:
-            print("denied")
-            statusDeniedAlert()
-        case .restricted:
-            print("restricted")
-            showAlert(title: "Доступ к геопозиции запрещен", message: "")
-        }
-    }
+//    
+//    func handleLocationAuthorizationStatus(status: CLAuthorizationStatus) {
+//        switch status {
+//        case .notDetermined:
+//            print("notDetermined")
+//            locationManager.requestWhenInUseAuthorization()
+//        case .authorizedWhenInUse, .authorizedAlways:
+//            print("authorizedWhenInUse, authorizedAlways")
+//            locationManager.startUpdatingLocation()
+//        case .denied:
+//            print("denied")
+//            statusDeniedAlert()
+//        case .restricted:
+//            print("restricted")
+//            showAlert(title: "Доступ к геопозиции запрещен", message: "")
+//        }
+//    }
     
     func showAlert(title: String, message: String) {
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
@@ -78,21 +78,21 @@ class MapViewController: UIViewController, SWRevealViewControllerDelegate {
         present(alertController, animated: true, completion: nil)
     }
     
-    func statusDeniedAlert() {
-        let alertController = UIAlertController(title: "Доступ к геопозиции запрещен", message: "Необходимо разрешить приложению доступ к геопозиции в настройках", preferredStyle: .alert)
-        alertController.addAction(UIAlertAction(title: "Отмена", style: .cancel, handler: nil))
-        alertController.addAction(UIAlertAction(title: "Настройки", style: .default, handler: { action in
-            if #available(iOS 10.0, *) {
-                let settingsURL = URL(string: UIApplicationOpenSettingsURLString)!
-                UIApplication.shared.open(settingsURL, options: [:], completionHandler: nil)
-            } else {
-                if let url = NSURL(string:UIApplicationOpenSettingsURLString) {
-                    UIApplication.shared.openURL(url as URL)
-                }
-            }
-        }))
-        self.present(alertController, animated: true, completion: nil)
-    }
+//    func statusDeniedAlert() {
+//        let alertController = UIAlertController(title: "Доступ к геопозиции запрещен", message: "Необходимо разрешить приложению доступ к геопозиции в настройках", preferredStyle: .alert)
+//        alertController.addAction(UIAlertAction(title: "Отмена", style: .cancel, handler: nil))
+//        alertController.addAction(UIAlertAction(title: "Настройки", style: .default, handler: { action in
+//            if #available(iOS 10.0, *) {
+//                let settingsURL = URL(string: UIApplicationOpenSettingsURLString)!
+//                UIApplication.shared.open(settingsURL, options: [:], completionHandler: nil)
+//            } else {
+//                if let url = NSURL(string:UIApplicationOpenSettingsURLString) {
+//                    UIApplication.shared.openURL(url as URL)
+//                }
+//            }
+//        }))
+//        self.present(alertController, animated: true, completion: nil)
+//    }
     
     func loadImagesFromPage(page: Int) {
         ServerManager.shared.getPhotos(page: page, complition: { success, response, error in
@@ -122,9 +122,9 @@ extension MapViewController: CLLocationManagerDelegate {
     
     //MARK: - CLLocationManagerDelegate
     
-    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
-        handleLocationAuthorizationStatus(status: status)
-    }
+//    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+//        handleLocationAuthorizationStatus(status: status)
+//    }
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         if let currentLocation = locations.last {
