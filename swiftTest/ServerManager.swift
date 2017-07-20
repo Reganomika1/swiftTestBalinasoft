@@ -69,9 +69,8 @@ class ServerManager: NSObject {
                     let errors = json["valid"].arrayValue
                     var message = String()
                     for error in errors{
-                        message += error["message"].stringValue + "\n"
+                        message += error["field"].stringValue + " : " + error["message"].stringValue + "\n"
                     }
-                    print(message)
                     complition(false, json, message)
                 }
                 complition(false, nil, nil)
