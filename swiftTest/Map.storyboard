@@ -8,7 +8,7 @@
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--Map View Controller-->
+        <!--Delegate-->
         <scene sceneID="3Qn-m3-PwJ">
             <objects>
                 <viewController storyboardIdentifier="mapStroryboard" useStoryboardIdentifierAsRestorationIdentifier="YES" id="tia-Cm-2RO" customClass="MapViewController" customModule="swiftTest" customModuleProvider="target" sceneMemberID="viewController">
@@ -23,6 +23,13 @@
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="0a6-Uf-wqQ" customClass="GMSMapView">
                                 <rect key="frame" x="0.0" y="64" width="320" height="416"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <connections>
+                                    <outlet property="delegate" destination="tia-Cm-2RO" id="MWg-su-ctT"/>
+                                </connections>
+                            </view>
+                            <view alpha="0.29999999999999999" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="JH0-p6-OLZ">
+                                <rect key="frame" x="0.0" y="64" width="320" height="416"/>
+                                <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                             </view>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -30,13 +37,18 @@
                             <constraint firstItem="Xso-54-UQa" firstAttribute="top" secondItem="0a6-Uf-wqQ" secondAttribute="bottom" id="3PW-5P-bYH"/>
                             <constraint firstItem="0a6-Uf-wqQ" firstAttribute="leading" secondItem="tww-Jp-4si" secondAttribute="leading" id="9aR-dW-C7s"/>
                             <constraint firstAttribute="trailing" secondItem="0a6-Uf-wqQ" secondAttribute="trailing" id="DZb-go-H4e"/>
+                            <constraint firstItem="JH0-p6-OLZ" firstAttribute="top" secondItem="2f6-dO-ncZ" secondAttribute="bottom" id="Y7z-t0-N2Z"/>
                             <constraint firstItem="0a6-Uf-wqQ" firstAttribute="top" secondItem="2f6-dO-ncZ" secondAttribute="bottom" id="iKH-kx-pW6"/>
+                            <constraint firstItem="Xso-54-UQa" firstAttribute="top" secondItem="JH0-p6-OLZ" secondAttribute="bottom" id="kfm-qx-LdH"/>
+                            <constraint firstItem="JH0-p6-OLZ" firstAttribute="leading" secondItem="tww-Jp-4si" secondAttribute="leading" id="tvK-iV-lWh"/>
+                            <constraint firstAttribute="trailing" secondItem="JH0-p6-OLZ" secondAttribute="trailing" id="vU5-vl-3mW"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="fDk-Yq-b0x">
                         <barButtonItem key="leftBarButtonItem" image="ic_menu" id="zNh-I8-3C0"/>
                     </navigationItem>
                     <connections>
+                        <outlet property="blackView" destination="JH0-p6-OLZ" id="03h-bu-sQO"/>
                         <outlet property="mapView" destination="0a6-Uf-wqQ" id="3u2-X2-x6w"/>
                         <outlet property="sideMenuButton" destination="zNh-I8-3C0" id="eHE-FP-6vi"/>
                     </connections>

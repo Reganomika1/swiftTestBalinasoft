@@ -28,7 +28,10 @@ class PhotoViewerViewController: UIViewController, UITableViewDelegate, UITableV
 
         tableView.estimatedRowHeight = 60
         
+        tableView.scrollsToTop = false
+        
         tableView.tableFooterView = UIView()
+        tableView.tableHeaderView = UIView()
         
         entityDescript = NSEntityDescription.entity(forEntityName: "Comment", in: CoreDataManager.shared.managedObjectContext)
 

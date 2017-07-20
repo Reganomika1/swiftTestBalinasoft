@@ -12,10 +12,12 @@ import Alamofire
 import SwiftyJSON
 import CoreLocation
 
-class MapViewController: UIViewController, SWRevealViewControllerDelegate {
+class MapViewController: UIViewController, SWRevealViewControllerDelegate, CLLocationManagerDelegate {
 
+    @IBOutlet weak var blackView: UIView!
     @IBOutlet weak var sideMenuButton: UIBarButtonItem!
     @IBOutlet weak var mapView: GMSMapView!
+    
     let locationManager = CLLocationManager()
     let marker = GMSMarker()
     var items = [Item]()
@@ -29,10 +31,15 @@ class MapViewController: UIViewController, SWRevealViewControllerDelegate {
             self.view.addGestureRecognizer(self.revealViewController().panGestureRecognizer())
         }
         
-        let locationManager = CLLocationManager()
+        self.revealViewController().delegate = self
+
         let marker = GMSMarker()
-    
         marker.map = mapView
+        
+        mapView?.isMyLocationEnabled = true
+        
+        locationManager.requestWhenInUseAuthorization()
+        locationManager.startUpdatingLocation()
         
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.delegate = self
@@ -40,33 +47,30 @@ class MapViewController: UIViewController, SWRevealViewControllerDelegate {
         locationManager.distanceFilter = 10
         locationManager.requestWhenInUseAuthorization()
         
+        blackView.isHidden = true
+        
         loadImagesFromPage(page: 0)
 
     }
+    
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
     }
     
+    //MARK: - Reveal controller delegate
+    
+    func revealController(_ revealController: SWRevealViewController!, willMoveTo position: FrontViewPosition) {
+        if (position == FrontViewPosition.right) {
+            blackView.isHidden = false
+        }
+        if (position == FrontViewPosition.left) {
+             blackView.isHidden = true
+        }
+    }
+    
 
     // MARK: Location
-//    
-//    func handleLocationAuthorizationStatus(status: CLAuthorizationStatus) {
-//        switch status {
-//        case .notDetermined:
-//            print("notDetermined")
-//            locationManager.requestWhenInUseAuthorization()
-//        case .authorizedWhenInUse, .authorizedAlways:
-//            print("authorizedWhenInUse, authorizedAlways")
-//            locationManager.startUpdatingLocation()
-//        case .denied:
-//            print("denied")
-//            statusDeniedAlert()
-//        case .restricted:
-//            print("restricted")
-//            showAlert(title: "Доступ к геопозиции запрещен", message: "")
-//        }
-//    }
     
     func showAlert(title: String, message: String) {
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
@@ -77,22 +81,6 @@ class MapViewController: UIViewController, SWRevealViewControllerDelegate {
         
         present(alertController, animated: true, completion: nil)
     }
-    
-//    func statusDeniedAlert() {
-//        let alertController = UIAlertController(title: "Доступ к геопозиции запрещен", message: "Необходимо разрешить приложению доступ к геопозиции в настройках", preferredStyle: .alert)
-//        alertController.addAction(UIAlertAction(title: "Отмена", style: .cancel, handler: nil))
-//        alertController.addAction(UIAlertAction(title: "Настройки", style: .default, handler: { action in
-//            if #available(iOS 10.0, *) {
-//                let settingsURL = URL(string: UIApplicationOpenSettingsURLString)!
-//                UIApplication.shared.open(settingsURL, options: [:], completionHandler: nil)
-//            } else {
-//                if let url = NSURL(string:UIApplicationOpenSettingsURLString) {
-//                    UIApplication.shared.openURL(url as URL)
-//                }
-//            }
-//        }))
-//        self.present(alertController, animated: true, completion: nil)
-//    }
     
     func loadImagesFromPage(page: Int) {
         ServerManager.shared.getPhotos(page: page, complition: { success, response, error in
@@ -114,33 +102,58 @@ class MapViewController: UIViewController, SWRevealViewControllerDelegate {
         })
     }
     
-
-}
-
-
-extension MapViewController: CLLocationManagerDelegate {
-    
     //MARK: - CLLocationManagerDelegate
     
-//    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
-//        handleLocationAuthorizationStatus(status: status)
-//    }
     
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        if let currentLocation = locations.last {
-            print("My coordinates are: \(currentLocation.coordinate.latitude), \(currentLocation.coordinate.longitude)")
+    func locationManager(_ manager: CLLocationManager,      didUpdateLocations locations: [CLLocation]) {
+        
+        let location = locationManager.location?.coordinate
+        
+        cameraMoveToLocation(toLocation: location)
+        
+    }
+    
+    func cameraMoveToLocation(toLocation: CLLocationCoordinate2D?) {
+        if toLocation != nil {
+            mapView.camera = GMSCameraPosition.camera(withTarget: toLocation!, zoom: 15)
             
-            marker.position = currentLocation.coordinate
-            mapView.camera = GMSCameraPosition(target: marker.position, zoom: 17, bearing: 0, viewingAngle: 0)
             
-            locationManager.stopUpdatingLocation()
         }
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         showAlert(title: "Ошибка доступа к геопозиции", message: "")
     }
+    
+
 }
+
+
+//extension MapViewController: CLLocationManagerDelegate {
+//    
+//    //MARK: - CLLocationManagerDelegate
+//
+//    
+//    func locationManager(_ manager: CLLocationManager,      didUpdateLocations locations: [CLLocation]) {
+//        
+//        let location = locationManager.location?.coordinate
+//        
+//        cameraMoveToLocation(toLocation: location)
+//        
+//    }
+//    
+//    func cameraMoveToLocation(toLocation: CLLocationCoordinate2D?) {
+//        if toLocation != nil {
+//            mapView.camera = GMSCameraPosition.camera(withTarget: toLocation!, zoom: 15)
+//            
+//            
+//        }
+//    }
+//    
+//    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+//        showAlert(title: "Ошибка доступа к геопозиции", message: "")
+//    }
+//}
 
 func compressImage (_ image: UIImage) -> UIImage {
     
