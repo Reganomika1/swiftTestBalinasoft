@@ -12,4 +12,8 @@ class PhotoCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var imageView: UIImageView!
     @IBOutlet weak var dateLabel: UILabel!
     
+    override func prepareForReuse() {
+        dateLabel.text = ""
+        imageView.image = UIImage()
+    }
 }

@@ -154,13 +154,17 @@ class ServerManager: NSObject {
                     complition(true, nil, nil)
                 }
             } else {
-                if let data = data {
-                    let json = JSON(data: data)
-                    print(json)
-                    let message = json["message"].string
-                    complition(false, json, message)
+                if status == 500 {
+                    complition(true, nil, "removePhotoError")
+                } else {
+                    if let data = data {
+                        let json = JSON(data: data)
+                        print(json)
+                        let message = json["message"].string
+                        complition(false, json, message)
+                    }
+                    complition(false, nil, nil)
                 }
-                complition(false, nil, nil)
             }
         }
     }

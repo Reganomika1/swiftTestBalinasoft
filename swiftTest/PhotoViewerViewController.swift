@@ -17,7 +17,7 @@ class PhotoViewerViewController: UIViewController, UITableViewDelegate, UITableV
     @IBOutlet weak var commentTextField: UITextField!
     @IBOutlet weak var tableView: UITableView!
     
-    var objectImageEntity: Item!
+    var fetchedItem: Item!
     var page: Int = 0
     
     var fetchedControl: NSFetchedResultsController<NSFetchRequestResult>!
@@ -29,16 +29,21 @@ class PhotoViewerViewController: UIViewController, UITableViewDelegate, UITableV
         
         tableView.tableFooterView = UIView()
         
-        self.imageView.sd_setImage(with: URL(string: objectImageEntity.imageUrl!))
+        self.imageView.sd_setImage(with: URL(string: fetchedItem.imageUrl!) , placeholderImage: #imageLiteral(resourceName: "person"))
         
-        fetchedControl = CoreDataManager.data.getFetchedResultController(entityName: "Comment", sortDescriptor: "date", ascending: true)
+        fetchedControl = CoreDataManager.shared.getFetchedResultController(entityName: "Comment", sortDescriptor: "date", ascending: true)
         fetchedControl.delegate = self
+        
         do {
             try fetchedControl.performFetch()
-        } catch {}
+        } catch {
+            let fetchError = error as NSError
+            print("Unable to Perform Fetch Request")
+            print("\(fetchError), \(fetchError.localizedDescription)")
+        }
 
         
-        let date = Date(timeIntervalSince1970: TimeInterval(objectImageEntity.date))
+        let date = Date(timeIntervalSince1970: TimeInterval(fetchedItem.date))
         let fomatter = DateFormatter()
         fomatter.dateFormat = "dd.MM.yyyy"
         self.dateLabel.text = fomatter.string(from: date)
@@ -52,21 +57,19 @@ class PhotoViewerViewController: UIViewController, UITableViewDelegate, UITableV
         super.didReceiveMemoryWarning()
     }
     
-    //MARK: - Number of rows in section table view
+    //MARK: - UITableViewDataSource
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return (self.objectImageEntity.comment?.allObjects.count)!
+        return (self.fetchedItem.comment?.allObjects.count)!
     }
-    
-    //MARK: - Cell for row at indexPath
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "commentCell") as! CommentTableViewCell
-        let objectCommentEntity = self.objectImageEntity.comment?.allObjects[indexPath.row] as! Comment
+        let fetchedComent = self.fetchedItem.comment?.allObjects[indexPath.row] as! Comment
         
-        cell.commentTextLabel.text = objectCommentEntity.text
-        let date = Date(timeIntervalSince1970: TimeInterval(objectCommentEntity.date))
+        cell.commentTextLabel.text = fetchedComent.text
+        let date = Date(timeIntervalSince1970: TimeInterval(fetchedComent.date))
         let fomatter = DateFormatter()
         fomatter.dateFormat = "dd.MM HH:mm"
         cell.commentDateLabel.text = fomatter.string(from: date)
@@ -74,52 +77,18 @@ class PhotoViewerViewController: UIViewController, UITableViewDelegate, UITableV
         return cell
     }
     
-    //MARK: - Height for row at indexPath
-    
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        
         return UITableViewAutomaticDimension
-        
     }
     
     //MARK: - Pagination comments
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
         
-//        if (comments.count - indexPath.row - 3) == 0 {
-//            
-//            self.page += 1
-//            
-//            loadCommentsFromPage(page: self.page)
-//        }
-    }
-    
-    //MARK: - Load comments from server
-    
-    func loadCommentsFromPage(page: Int) {
-        ServerManager.shared.getComments(page: page, imageId: Int(objectImageEntity.itemId), complition: { success, response, error in
-            if success == true {
-                let commentsArray = response?["data"].arrayValue
-                
-                flag: for element in commentsArray! {
-                    
-                    let massCommentsFromImage = self.objectImageEntity.comment?.allObjects as! [Comment]
-                    for object in massCommentsFromImage {
-                        if object.commentId == element["id"].int32! {
-                            continue flag
-                        }
-                    }
-                    
-                    let objectCommentEntity = Comment()
-                    objectCommentEntity.date = element["date"].int32!
-                    objectCommentEntity.commentId = element["id"].int32!
-                    objectCommentEntity.text = element["text"].stringValue
-                    objectCommentEntity.item = self.objectImageEntity
-                    CoreDataManager.data.saveContext()
-                }
-            }
-            self.tableView.reloadData()
-        })
+        if (fetchedControl.sections!.first?.numberOfObjects)!-1 == indexPath.row && (fetchedControl.sections!.first?.numberOfObjects)!%10 == 0{
+            self.page += 1
+            loadCommentsFromPage(page: self.page)
+        }
     }
     
     //MARK: - Close keyboard when user tap to screen
@@ -128,18 +97,20 @@ class PhotoViewerViewController: UIViewController, UITableViewDelegate, UITableV
         view.endEditing(true)
     }
     
+    //MARK: - UITableViewDelegate
+    
     func tableView(_: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
         let deleteAction = UITableViewRowAction(style: UITableViewRowActionStyle.default, title: "Удалить") { (UITableViewRowAction, NSIndexPath) -> Void in
-            let objectCommentEntity = self.objectImageEntity.comment?.allObjects[indexPath.row] as! Comment
+            let fetchedComent = self.fetchedItem.comment?.allObjects[indexPath.row] as! Comment
             
             let alert = UIAlertController(title: "", message: "Do you want to delete this comment?", preferredStyle: UIAlertControllerStyle.alert)
             
             alert.addAction(UIAlertAction(title: "Yes", style: UIAlertActionStyle.default, handler: { action in
                 
-                ServerManager.shared.removeComment(commentId: Int(objectCommentEntity.commentId), imageId:  Int(self.objectImageEntity.itemId), complition:{ success, response, error in
+                ServerManager.shared.removeComment(commentId: Int(fetchedComent.commentId), imageId:  Int(self.fetchedItem.itemId), complition:{ success, response, error in
                     if success == true {
-                        CoreDataManager.data.managedObjectContext.delete(objectCommentEntity)
-                        CoreDataManager.data.saveContext()
+                        CoreDataManager.shared.managedObjectContext.delete(fetchedComent)
+                        CoreDataManager.shared.saveContext()
                     }
                 })
             }))
@@ -151,6 +122,8 @@ class PhotoViewerViewController: UIViewController, UITableViewDelegate, UITableV
         return [deleteAction]
     }
     
+    //MARK: - NSFetchedResultsControllerDelegate
+    
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         self.tableView.reloadData()
     }
@@ -158,22 +131,49 @@ class PhotoViewerViewController: UIViewController, UITableViewDelegate, UITableV
     
     //MARK: - Actions
     
-    
     @IBAction func sendButtonPressed(_ sender: UIButton) {
-        ServerManager.shared.postComment(imageId: Int(objectImageEntity.itemId), text: commentTextField.text!, complition:{ success, response, error in
+        ServerManager.shared.postComment(imageId: Int(fetchedItem.itemId), text: commentTextField.text!, complition:{ success, response, error in
             
             if success == true{
                 let objectCommentEntity = Comment()
                 objectCommentEntity.commentId = (response?["data"]["id"].int32!)!
                 objectCommentEntity.date = (response?["data"]["date"].int32!)!
                 objectCommentEntity.text = response?["data"]["text"].stringValue
-                objectCommentEntity.item = self.objectImageEntity
-                CoreDataManager.data.saveContext()
+                objectCommentEntity.item = self.fetchedItem
+                CoreDataManager.shared.saveContext()
                 
                 self.commentTextField.text = ""
                 
                 self.tableView.reloadData()
             }
+        })
+    }
+    
+    //MARK: - Custom methods
+    
+    func loadCommentsFromPage(page: Int) {
+        ServerManager.shared.getComments(page: page, imageId: Int(fetchedItem.itemId), complition: { success, response, error in
+            if success == true {
+                let commentsArray = response?["data"].arrayValue
+                
+                flag: for element in commentsArray! {
+                    
+                    let fetchedComments = self.fetchedItem.comment?.allObjects as! [Comment]
+                    for object in fetchedComments {
+                        if object.commentId == element["id"].int32! {
+                            continue flag
+                        }
+                    }
+                    
+                    let comment = Comment()
+                    comment.date = element["date"].int32!
+                    comment.commentId = element["id"].int32!
+                    comment.text = element["text"].stringValue
+                    comment.item = self.fetchedItem
+                    CoreDataManager.shared.saveContext()
+                }
+            }
+            self.tableView.reloadData()
         })
     }
 

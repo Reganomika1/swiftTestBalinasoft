@@ -11,7 +11,7 @@ import CoreData
 
 class CoreDataManager {
     
-    static let data = CoreDataManager()
+    static let shared = CoreDataManager()
     
     private init() {}
     
@@ -21,7 +21,7 @@ class CoreDataManager {
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
         let sortDescriptor = NSSortDescriptor(key: sortDescriptor, ascending: ascending)
         fetchRequest.sortDescriptors = [sortDescriptor]
-        return NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: CoreDataManager.data.managedObjectContext, sectionNameKeyPath: nil, cacheName: nil)
+        return NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: CoreDataManager.shared.managedObjectContext, sectionNameKeyPath: nil, cacheName: nil)
     }
     
     lazy var applicationDocumentsDirectory: NSURL = {
